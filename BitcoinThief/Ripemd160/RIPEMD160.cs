@@ -4,18 +4,20 @@
 
 // Contributed to .NET Foundation by Darren R. Starr - Conscia Norway AS
 
-namespace System.Security.Cryptography
+using System.Security.Cryptography;
+
+namespace BitcoinThief.Ripemd160
 {
-    public abstract class RIPEMD160 : HashAlgorithm
+    public abstract class Ripemd160 : HashAlgorithm
     {
-        public new static RIPEMD160 Create()
+        public new static Ripemd160 Create()
         {
-            return new RIPEMD160Managed();
+            return new Ripemd160Managed();
         }
 
-        public new static RIPEMD160 Create(string hashname)
+        public new static Ripemd160 Create(string hashname)
         {
-            return new RIPEMD160Managed();
+            return new Ripemd160Managed();
         }
     }
 }

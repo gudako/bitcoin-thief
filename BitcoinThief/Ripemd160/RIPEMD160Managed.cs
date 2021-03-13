@@ -11,25 +11,26 @@
 //   https://homes.esat.kuleuven.be/~bosselae/ripemd160.html) the legal license
 //   status of this code is not clear. 
 
+using System;
 using System.Linq;
 
-namespace System.Security.Cryptography
+namespace BitcoinThief.Ripemd160
 {
-    public class RIPEMD160Managed : RIPEMD160
+    public class Ripemd160Managed : Ripemd160
     {
-        private static readonly int RMDsize = 160;
-        private long HashedLength;
-        private uint[] MDbuf = new uint[RMDsize / 32];
-        private readonly byte[] UnhashedBuffer = new byte[64];
-        private int UnhashedBufferLength;
-        private uint[] X = new uint[16]; /* current 16-word chunk        */
+        private static readonly int RmDsize = 160;
+        private readonly byte[] _unhashedBuffer = new byte[64];
+        private long _hashedLength;
+        private uint[] _mDbuf = new uint[RmDsize / 32];
+        private int _unhashedBufferLength;
+        private uint[] _x = new uint[16]; /* current 16-word chunk        */
 
-        public RIPEMD160Managed()
+        public Ripemd160Managed()
         {
             Initialize();
         }
 
-        public static uint ReadUInt32(byte[] buffer, long offset)
+        private static uint ReadUInt32(byte[] buffer, long offset)
         {
             return
                 (Convert.ToUInt32(buffer[3 + offset]) << 24) |
@@ -71,72 +72,70 @@ namespace System.Security.Cryptography
 
         /* the ten basic operations FF() through III() */
 
-        private static void FF(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
+        private static void Ff(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
         {
             a += F(b, c, d) + x;
             a = RotateLeft(a, s) + e;
             c = RotateLeft(c, 10);
         }
 
-
-        private static void GG(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
+        private static void Gg(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
         {
             a += G(b, c, d) + x + 0x5a827999;
             a = RotateLeft(a, s) + e;
             c = RotateLeft(c, 10);
         }
 
-
-        private static void HH(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
+        private static void Hh(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
         {
             a += H(b, c, d) + x + 0x6ed9eba1;
             a = RotateLeft(a, s) + e;
             c = RotateLeft(c, 10);
         }
 
-        private static void II(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
+        private static void Ii(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
         {
             a += I(b, c, d) + x + 0x8f1bbcdc;
             a = RotateLeft(a, s) + e;
             c = RotateLeft(c, 10);
         }
 
-        private static void JJ(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
+        private static void Jj(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
         {
             a += J(b, c, d) + x + 0xa953fd4e;
             a = RotateLeft(a, s) + e;
             c = RotateLeft(c, 10);
         }
 
-        private static void FFF(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
+        private static void Fff(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
         {
             a += F(b, c, d) + x;
             a = RotateLeft(a, s) + e;
             c = RotateLeft(c, 10);
         }
 
-        private static void GGG(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
+        private static void Ggg(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
         {
             a += G(b, c, d) + x + 0x7a6d76e9;
             a = RotateLeft(a, s) + e;
             c = RotateLeft(c, 10);
         }
 
-        private static void HHH(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
+        private static void Hhh(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
         {
             a += H(b, c, d) + x + 0x6d703ef3;
             a = RotateLeft(a, s) + e;
             c = RotateLeft(c, 10);
         }
 
-        private static void III(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
+        private static void Iii(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
         {
             a += I(b, c, d) + x + 0x5c4dd124;
             a = RotateLeft(a, s) + e;
             c = RotateLeft(c, 10);
         }
 
-        private static void JJJ(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
+        private static void Jjj(ref uint a, uint b, ref uint c, uint d, uint e, uint x, int s)
         {
             a += J(b, c, d) + x + 0x50a28be6;
             a = RotateLeft(a, s) + e;
@@ -144,248 +143,247 @@ namespace System.Security.Cryptography
         }
 
         /// initializes MDbuffer to "magic constants"
-        public static void MDinit(ref uint[] MDbuf)
+        private static void MDinit(ref uint[] mDbuf)
         {
-            MDbuf[0] = 0x67452301;
-            MDbuf[1] = 0xefcdab89;
-            MDbuf[2] = 0x98badcfe;
-            MDbuf[3] = 0x10325476;
-            MDbuf[4] = 0xc3d2e1f0;
+            mDbuf[0] = 0x67452301;
+            mDbuf[1] = 0xefcdab89;
+            mDbuf[2] = 0x98badcfe;
+            mDbuf[3] = 0x10325476;
+            mDbuf[4] = 0xc3d2e1f0;
         }
 
         /// the compression function.
         /// transforms MDbuf using message bytes X[0] through X[15]
-        public static void compress(ref uint[] MDbuf, uint[] X)
+        private static void Compress(ref uint[] mDbuf, uint[] x)
         {
-            var aa = MDbuf[0];
-            var bb = MDbuf[1];
-            var cc = MDbuf[2];
-            var dd = MDbuf[3];
-            var ee = MDbuf[4];
-            var aaa = MDbuf[0];
-            var bbb = MDbuf[1];
-            var ccc = MDbuf[2];
-            var ddd = MDbuf[3];
-            var eee = MDbuf[4];
+            var aa = mDbuf[0];
+            var bb = mDbuf[1];
+            var cc = mDbuf[2];
+            var dd = mDbuf[3];
+            var ee = mDbuf[4];
+            var aaa = mDbuf[0];
+            var bbb = mDbuf[1];
+            var ccc = mDbuf[2];
+            var ddd = mDbuf[3];
+            var eee = mDbuf[4];
 
             /* round 1 */
-            FF(ref aa, bb, ref cc, dd, ee, X[0], 11);
-            FF(ref ee, aa, ref bb, cc, dd, X[1], 14);
-            FF(ref dd, ee, ref aa, bb, cc, X[2], 15);
-            FF(ref cc, dd, ref ee, aa, bb, X[3], 12);
-            FF(ref bb, cc, ref dd, ee, aa, X[4], 5);
-            FF(ref aa, bb, ref cc, dd, ee, X[5], 8);
-            FF(ref ee, aa, ref bb, cc, dd, X[6], 7);
-            FF(ref dd, ee, ref aa, bb, cc, X[7], 9);
-            FF(ref cc, dd, ref ee, aa, bb, X[8], 11);
-            FF(ref bb, cc, ref dd, ee, aa, X[9], 13);
-            FF(ref aa, bb, ref cc, dd, ee, X[10], 14);
-            FF(ref ee, aa, ref bb, cc, dd, X[11], 15);
-            FF(ref dd, ee, ref aa, bb, cc, X[12], 6);
-            FF(ref cc, dd, ref ee, aa, bb, X[13], 7);
-            FF(ref bb, cc, ref dd, ee, aa, X[14], 9);
-            FF(ref aa, bb, ref cc, dd, ee, X[15], 8);
+            Ff(ref aa, bb, ref cc, dd, ee, x[0], 11);
+            Ff(ref ee, aa, ref bb, cc, dd, x[1], 14);
+            Ff(ref dd, ee, ref aa, bb, cc, x[2], 15);
+            Ff(ref cc, dd, ref ee, aa, bb, x[3], 12);
+            Ff(ref bb, cc, ref dd, ee, aa, x[4], 5);
+            Ff(ref aa, bb, ref cc, dd, ee, x[5], 8);
+            Ff(ref ee, aa, ref bb, cc, dd, x[6], 7);
+            Ff(ref dd, ee, ref aa, bb, cc, x[7], 9);
+            Ff(ref cc, dd, ref ee, aa, bb, x[8], 11);
+            Ff(ref bb, cc, ref dd, ee, aa, x[9], 13);
+            Ff(ref aa, bb, ref cc, dd, ee, x[10], 14);
+            Ff(ref ee, aa, ref bb, cc, dd, x[11], 15);
+            Ff(ref dd, ee, ref aa, bb, cc, x[12], 6);
+            Ff(ref cc, dd, ref ee, aa, bb, x[13], 7);
+            Ff(ref bb, cc, ref dd, ee, aa, x[14], 9);
+            Ff(ref aa, bb, ref cc, dd, ee, x[15], 8);
 
             /* round 2 */
-            GG(ref ee, aa, ref bb, cc, dd, X[7], 7);
-            GG(ref dd, ee, ref aa, bb, cc, X[4], 6);
-            GG(ref cc, dd, ref ee, aa, bb, X[13], 8);
-            GG(ref bb, cc, ref dd, ee, aa, X[1], 13);
-            GG(ref aa, bb, ref cc, dd, ee, X[10], 11);
-            GG(ref ee, aa, ref bb, cc, dd, X[6], 9);
-            GG(ref dd, ee, ref aa, bb, cc, X[15], 7);
-            GG(ref cc, dd, ref ee, aa, bb, X[3], 15);
-            GG(ref bb, cc, ref dd, ee, aa, X[12], 7);
-            GG(ref aa, bb, ref cc, dd, ee, X[0], 12);
-            GG(ref ee, aa, ref bb, cc, dd, X[9], 15);
-            GG(ref dd, ee, ref aa, bb, cc, X[5], 9);
-            GG(ref cc, dd, ref ee, aa, bb, X[2], 11);
-            GG(ref bb, cc, ref dd, ee, aa, X[14], 7);
-            GG(ref aa, bb, ref cc, dd, ee, X[11], 13);
-            GG(ref ee, aa, ref bb, cc, dd, X[8], 12);
+            Gg(ref ee, aa, ref bb, cc, dd, x[7], 7);
+            Gg(ref dd, ee, ref aa, bb, cc, x[4], 6);
+            Gg(ref cc, dd, ref ee, aa, bb, x[13], 8);
+            Gg(ref bb, cc, ref dd, ee, aa, x[1], 13);
+            Gg(ref aa, bb, ref cc, dd, ee, x[10], 11);
+            Gg(ref ee, aa, ref bb, cc, dd, x[6], 9);
+            Gg(ref dd, ee, ref aa, bb, cc, x[15], 7);
+            Gg(ref cc, dd, ref ee, aa, bb, x[3], 15);
+            Gg(ref bb, cc, ref dd, ee, aa, x[12], 7);
+            Gg(ref aa, bb, ref cc, dd, ee, x[0], 12);
+            Gg(ref ee, aa, ref bb, cc, dd, x[9], 15);
+            Gg(ref dd, ee, ref aa, bb, cc, x[5], 9);
+            Gg(ref cc, dd, ref ee, aa, bb, x[2], 11);
+            Gg(ref bb, cc, ref dd, ee, aa, x[14], 7);
+            Gg(ref aa, bb, ref cc, dd, ee, x[11], 13);
+            Gg(ref ee, aa, ref bb, cc, dd, x[8], 12);
 
             /* round 3 */
-            HH(ref dd, ee, ref aa, bb, cc, X[3], 11);
-            HH(ref cc, dd, ref ee, aa, bb, X[10], 13);
-            HH(ref bb, cc, ref dd, ee, aa, X[14], 6);
-            HH(ref aa, bb, ref cc, dd, ee, X[4], 7);
-            HH(ref ee, aa, ref bb, cc, dd, X[9], 14);
-            HH(ref dd, ee, ref aa, bb, cc, X[15], 9);
-            HH(ref cc, dd, ref ee, aa, bb, X[8], 13);
-            HH(ref bb, cc, ref dd, ee, aa, X[1], 15);
-            HH(ref aa, bb, ref cc, dd, ee, X[2], 14);
-            HH(ref ee, aa, ref bb, cc, dd, X[7], 8);
-            HH(ref dd, ee, ref aa, bb, cc, X[0], 13);
-            HH(ref cc, dd, ref ee, aa, bb, X[6], 6);
-            HH(ref bb, cc, ref dd, ee, aa, X[13], 5);
-            HH(ref aa, bb, ref cc, dd, ee, X[11], 12);
-            HH(ref ee, aa, ref bb, cc, dd, X[5], 7);
-            HH(ref dd, ee, ref aa, bb, cc, X[12], 5);
+            Hh(ref dd, ee, ref aa, bb, cc, x[3], 11);
+            Hh(ref cc, dd, ref ee, aa, bb, x[10], 13);
+            Hh(ref bb, cc, ref dd, ee, aa, x[14], 6);
+            Hh(ref aa, bb, ref cc, dd, ee, x[4], 7);
+            Hh(ref ee, aa, ref bb, cc, dd, x[9], 14);
+            Hh(ref dd, ee, ref aa, bb, cc, x[15], 9);
+            Hh(ref cc, dd, ref ee, aa, bb, x[8], 13);
+            Hh(ref bb, cc, ref dd, ee, aa, x[1], 15);
+            Hh(ref aa, bb, ref cc, dd, ee, x[2], 14);
+            Hh(ref ee, aa, ref bb, cc, dd, x[7], 8);
+            Hh(ref dd, ee, ref aa, bb, cc, x[0], 13);
+            Hh(ref cc, dd, ref ee, aa, bb, x[6], 6);
+            Hh(ref bb, cc, ref dd, ee, aa, x[13], 5);
+            Hh(ref aa, bb, ref cc, dd, ee, x[11], 12);
+            Hh(ref ee, aa, ref bb, cc, dd, x[5], 7);
+            Hh(ref dd, ee, ref aa, bb, cc, x[12], 5);
 
             /* round 4 */
-            II(ref cc, dd, ref ee, aa, bb, X[1], 11);
-            II(ref bb, cc, ref dd, ee, aa, X[9], 12);
-            II(ref aa, bb, ref cc, dd, ee, X[11], 14);
-            II(ref ee, aa, ref bb, cc, dd, X[10], 15);
-            II(ref dd, ee, ref aa, bb, cc, X[0], 14);
-            II(ref cc, dd, ref ee, aa, bb, X[8], 15);
-            II(ref bb, cc, ref dd, ee, aa, X[12], 9);
-            II(ref aa, bb, ref cc, dd, ee, X[4], 8);
-            II(ref ee, aa, ref bb, cc, dd, X[13], 9);
-            II(ref dd, ee, ref aa, bb, cc, X[3], 14);
-            II(ref cc, dd, ref ee, aa, bb, X[7], 5);
-            II(ref bb, cc, ref dd, ee, aa, X[15], 6);
-            II(ref aa, bb, ref cc, dd, ee, X[14], 8);
-            II(ref ee, aa, ref bb, cc, dd, X[5], 6);
-            II(ref dd, ee, ref aa, bb, cc, X[6], 5);
-            II(ref cc, dd, ref ee, aa, bb, X[2], 12);
+            Ii(ref cc, dd, ref ee, aa, bb, x[1], 11);
+            Ii(ref bb, cc, ref dd, ee, aa, x[9], 12);
+            Ii(ref aa, bb, ref cc, dd, ee, x[11], 14);
+            Ii(ref ee, aa, ref bb, cc, dd, x[10], 15);
+            Ii(ref dd, ee, ref aa, bb, cc, x[0], 14);
+            Ii(ref cc, dd, ref ee, aa, bb, x[8], 15);
+            Ii(ref bb, cc, ref dd, ee, aa, x[12], 9);
+            Ii(ref aa, bb, ref cc, dd, ee, x[4], 8);
+            Ii(ref ee, aa, ref bb, cc, dd, x[13], 9);
+            Ii(ref dd, ee, ref aa, bb, cc, x[3], 14);
+            Ii(ref cc, dd, ref ee, aa, bb, x[7], 5);
+            Ii(ref bb, cc, ref dd, ee, aa, x[15], 6);
+            Ii(ref aa, bb, ref cc, dd, ee, x[14], 8);
+            Ii(ref ee, aa, ref bb, cc, dd, x[5], 6);
+            Ii(ref dd, ee, ref aa, bb, cc, x[6], 5);
+            Ii(ref cc, dd, ref ee, aa, bb, x[2], 12);
 
             /* round 5 */
-            JJ(ref bb, cc, ref dd, ee, aa, X[4], 9);
-            JJ(ref aa, bb, ref cc, dd, ee, X[0], 15);
-            JJ(ref ee, aa, ref bb, cc, dd, X[5], 5);
-            JJ(ref dd, ee, ref aa, bb, cc, X[9], 11);
-            JJ(ref cc, dd, ref ee, aa, bb, X[7], 6);
-            JJ(ref bb, cc, ref dd, ee, aa, X[12], 8);
-            JJ(ref aa, bb, ref cc, dd, ee, X[2], 13);
-            JJ(ref ee, aa, ref bb, cc, dd, X[10], 12);
-            JJ(ref dd, ee, ref aa, bb, cc, X[14], 5);
-            JJ(ref cc, dd, ref ee, aa, bb, X[1], 12);
-            JJ(ref bb, cc, ref dd, ee, aa, X[3], 13);
-            JJ(ref aa, bb, ref cc, dd, ee, X[8], 14);
-            JJ(ref ee, aa, ref bb, cc, dd, X[11], 11);
-            JJ(ref dd, ee, ref aa, bb, cc, X[6], 8);
-            JJ(ref cc, dd, ref ee, aa, bb, X[15], 5);
-            JJ(ref bb, cc, ref dd, ee, aa, X[13], 6);
+            Jj(ref bb, cc, ref dd, ee, aa, x[4], 9);
+            Jj(ref aa, bb, ref cc, dd, ee, x[0], 15);
+            Jj(ref ee, aa, ref bb, cc, dd, x[5], 5);
+            Jj(ref dd, ee, ref aa, bb, cc, x[9], 11);
+            Jj(ref cc, dd, ref ee, aa, bb, x[7], 6);
+            Jj(ref bb, cc, ref dd, ee, aa, x[12], 8);
+            Jj(ref aa, bb, ref cc, dd, ee, x[2], 13);
+            Jj(ref ee, aa, ref bb, cc, dd, x[10], 12);
+            Jj(ref dd, ee, ref aa, bb, cc, x[14], 5);
+            Jj(ref cc, dd, ref ee, aa, bb, x[1], 12);
+            Jj(ref bb, cc, ref dd, ee, aa, x[3], 13);
+            Jj(ref aa, bb, ref cc, dd, ee, x[8], 14);
+            Jj(ref ee, aa, ref bb, cc, dd, x[11], 11);
+            Jj(ref dd, ee, ref aa, bb, cc, x[6], 8);
+            Jj(ref cc, dd, ref ee, aa, bb, x[15], 5);
+            Jj(ref bb, cc, ref dd, ee, aa, x[13], 6);
 
             /* parallel round 1 */
-            JJJ(ref aaa, bbb, ref ccc, ddd, eee, X[5], 8);
-            JJJ(ref eee, aaa, ref bbb, ccc, ddd, X[14], 9);
-            JJJ(ref ddd, eee, ref aaa, bbb, ccc, X[7], 9);
-            JJJ(ref ccc, ddd, ref eee, aaa, bbb, X[0], 11);
-            JJJ(ref bbb, ccc, ref ddd, eee, aaa, X[9], 13);
-            JJJ(ref aaa, bbb, ref ccc, ddd, eee, X[2], 15);
-            JJJ(ref eee, aaa, ref bbb, ccc, ddd, X[11], 15);
-            JJJ(ref ddd, eee, ref aaa, bbb, ccc, X[4], 5);
-            JJJ(ref ccc, ddd, ref eee, aaa, bbb, X[13], 7);
-            JJJ(ref bbb, ccc, ref ddd, eee, aaa, X[6], 7);
-            JJJ(ref aaa, bbb, ref ccc, ddd, eee, X[15], 8);
-            JJJ(ref eee, aaa, ref bbb, ccc, ddd, X[8], 11);
-            JJJ(ref ddd, eee, ref aaa, bbb, ccc, X[1], 14);
-            JJJ(ref ccc, ddd, ref eee, aaa, bbb, X[10], 14);
-            JJJ(ref bbb, ccc, ref ddd, eee, aaa, X[3], 12);
-            JJJ(ref aaa, bbb, ref ccc, ddd, eee, X[12], 6);
+            Jjj(ref aaa, bbb, ref ccc, ddd, eee, x[5], 8);
+            Jjj(ref eee, aaa, ref bbb, ccc, ddd, x[14], 9);
+            Jjj(ref ddd, eee, ref aaa, bbb, ccc, x[7], 9);
+            Jjj(ref ccc, ddd, ref eee, aaa, bbb, x[0], 11);
+            Jjj(ref bbb, ccc, ref ddd, eee, aaa, x[9], 13);
+            Jjj(ref aaa, bbb, ref ccc, ddd, eee, x[2], 15);
+            Jjj(ref eee, aaa, ref bbb, ccc, ddd, x[11], 15);
+            Jjj(ref ddd, eee, ref aaa, bbb, ccc, x[4], 5);
+            Jjj(ref ccc, ddd, ref eee, aaa, bbb, x[13], 7);
+            Jjj(ref bbb, ccc, ref ddd, eee, aaa, x[6], 7);
+            Jjj(ref aaa, bbb, ref ccc, ddd, eee, x[15], 8);
+            Jjj(ref eee, aaa, ref bbb, ccc, ddd, x[8], 11);
+            Jjj(ref ddd, eee, ref aaa, bbb, ccc, x[1], 14);
+            Jjj(ref ccc, ddd, ref eee, aaa, bbb, x[10], 14);
+            Jjj(ref bbb, ccc, ref ddd, eee, aaa, x[3], 12);
+            Jjj(ref aaa, bbb, ref ccc, ddd, eee, x[12], 6);
 
             /* parallel round 2 */
-            III(ref eee, aaa, ref bbb, ccc, ddd, X[6], 9);
-            III(ref ddd, eee, ref aaa, bbb, ccc, X[11], 13);
-            III(ref ccc, ddd, ref eee, aaa, bbb, X[3], 15);
-            III(ref bbb, ccc, ref ddd, eee, aaa, X[7], 7);
-            III(ref aaa, bbb, ref ccc, ddd, eee, X[0], 12);
-            III(ref eee, aaa, ref bbb, ccc, ddd, X[13], 8);
-            III(ref ddd, eee, ref aaa, bbb, ccc, X[5], 9);
-            III(ref ccc, ddd, ref eee, aaa, bbb, X[10], 11);
-            III(ref bbb, ccc, ref ddd, eee, aaa, X[14], 7);
-            III(ref aaa, bbb, ref ccc, ddd, eee, X[15], 7);
-            III(ref eee, aaa, ref bbb, ccc, ddd, X[8], 12);
-            III(ref ddd, eee, ref aaa, bbb, ccc, X[12], 7);
-            III(ref ccc, ddd, ref eee, aaa, bbb, X[4], 6);
-            III(ref bbb, ccc, ref ddd, eee, aaa, X[9], 15);
-            III(ref aaa, bbb, ref ccc, ddd, eee, X[1], 13);
-            III(ref eee, aaa, ref bbb, ccc, ddd, X[2], 11);
+            Iii(ref eee, aaa, ref bbb, ccc, ddd, x[6], 9);
+            Iii(ref ddd, eee, ref aaa, bbb, ccc, x[11], 13);
+            Iii(ref ccc, ddd, ref eee, aaa, bbb, x[3], 15);
+            Iii(ref bbb, ccc, ref ddd, eee, aaa, x[7], 7);
+            Iii(ref aaa, bbb, ref ccc, ddd, eee, x[0], 12);
+            Iii(ref eee, aaa, ref bbb, ccc, ddd, x[13], 8);
+            Iii(ref ddd, eee, ref aaa, bbb, ccc, x[5], 9);
+            Iii(ref ccc, ddd, ref eee, aaa, bbb, x[10], 11);
+            Iii(ref bbb, ccc, ref ddd, eee, aaa, x[14], 7);
+            Iii(ref aaa, bbb, ref ccc, ddd, eee, x[15], 7);
+            Iii(ref eee, aaa, ref bbb, ccc, ddd, x[8], 12);
+            Iii(ref ddd, eee, ref aaa, bbb, ccc, x[12], 7);
+            Iii(ref ccc, ddd, ref eee, aaa, bbb, x[4], 6);
+            Iii(ref bbb, ccc, ref ddd, eee, aaa, x[9], 15);
+            Iii(ref aaa, bbb, ref ccc, ddd, eee, x[1], 13);
+            Iii(ref eee, aaa, ref bbb, ccc, ddd, x[2], 11);
 
             /* parallel round 3 */
-            HHH(ref ddd, eee, ref aaa, bbb, ccc, X[15], 9);
-            HHH(ref ccc, ddd, ref eee, aaa, bbb, X[5], 7);
-            HHH(ref bbb, ccc, ref ddd, eee, aaa, X[1], 15);
-            HHH(ref aaa, bbb, ref ccc, ddd, eee, X[3], 11);
-            HHH(ref eee, aaa, ref bbb, ccc, ddd, X[7], 8);
-            HHH(ref ddd, eee, ref aaa, bbb, ccc, X[14], 6);
-            HHH(ref ccc, ddd, ref eee, aaa, bbb, X[6], 6);
-            HHH(ref bbb, ccc, ref ddd, eee, aaa, X[9], 14);
-            HHH(ref aaa, bbb, ref ccc, ddd, eee, X[11], 12);
-            HHH(ref eee, aaa, ref bbb, ccc, ddd, X[8], 13);
-            HHH(ref ddd, eee, ref aaa, bbb, ccc, X[12], 5);
-            HHH(ref ccc, ddd, ref eee, aaa, bbb, X[2], 14);
-            HHH(ref bbb, ccc, ref ddd, eee, aaa, X[10], 13);
-            HHH(ref aaa, bbb, ref ccc, ddd, eee, X[0], 13);
-            HHH(ref eee, aaa, ref bbb, ccc, ddd, X[4], 7);
-            HHH(ref ddd, eee, ref aaa, bbb, ccc, X[13], 5);
+            Hhh(ref ddd, eee, ref aaa, bbb, ccc, x[15], 9);
+            Hhh(ref ccc, ddd, ref eee, aaa, bbb, x[5], 7);
+            Hhh(ref bbb, ccc, ref ddd, eee, aaa, x[1], 15);
+            Hhh(ref aaa, bbb, ref ccc, ddd, eee, x[3], 11);
+            Hhh(ref eee, aaa, ref bbb, ccc, ddd, x[7], 8);
+            Hhh(ref ddd, eee, ref aaa, bbb, ccc, x[14], 6);
+            Hhh(ref ccc, ddd, ref eee, aaa, bbb, x[6], 6);
+            Hhh(ref bbb, ccc, ref ddd, eee, aaa, x[9], 14);
+            Hhh(ref aaa, bbb, ref ccc, ddd, eee, x[11], 12);
+            Hhh(ref eee, aaa, ref bbb, ccc, ddd, x[8], 13);
+            Hhh(ref ddd, eee, ref aaa, bbb, ccc, x[12], 5);
+            Hhh(ref ccc, ddd, ref eee, aaa, bbb, x[2], 14);
+            Hhh(ref bbb, ccc, ref ddd, eee, aaa, x[10], 13);
+            Hhh(ref aaa, bbb, ref ccc, ddd, eee, x[0], 13);
+            Hhh(ref eee, aaa, ref bbb, ccc, ddd, x[4], 7);
+            Hhh(ref ddd, eee, ref aaa, bbb, ccc, x[13], 5);
 
             /* parallel round 4 */
-            GGG(ref ccc, ddd, ref eee, aaa, bbb, X[8], 15);
-            GGG(ref bbb, ccc, ref ddd, eee, aaa, X[6], 5);
-            GGG(ref aaa, bbb, ref ccc, ddd, eee, X[4], 8);
-            GGG(ref eee, aaa, ref bbb, ccc, ddd, X[1], 11);
-            GGG(ref ddd, eee, ref aaa, bbb, ccc, X[3], 14);
-            GGG(ref ccc, ddd, ref eee, aaa, bbb, X[11], 14);
-            GGG(ref bbb, ccc, ref ddd, eee, aaa, X[15], 6);
-            GGG(ref aaa, bbb, ref ccc, ddd, eee, X[0], 14);
-            GGG(ref eee, aaa, ref bbb, ccc, ddd, X[5], 6);
-            GGG(ref ddd, eee, ref aaa, bbb, ccc, X[12], 9);
-            GGG(ref ccc, ddd, ref eee, aaa, bbb, X[2], 12);
-            GGG(ref bbb, ccc, ref ddd, eee, aaa, X[13], 9);
-            GGG(ref aaa, bbb, ref ccc, ddd, eee, X[9], 12);
-            GGG(ref eee, aaa, ref bbb, ccc, ddd, X[7], 5);
-            GGG(ref ddd, eee, ref aaa, bbb, ccc, X[10], 15);
-            GGG(ref ccc, ddd, ref eee, aaa, bbb, X[14], 8);
+            Ggg(ref ccc, ddd, ref eee, aaa, bbb, x[8], 15);
+            Ggg(ref bbb, ccc, ref ddd, eee, aaa, x[6], 5);
+            Ggg(ref aaa, bbb, ref ccc, ddd, eee, x[4], 8);
+            Ggg(ref eee, aaa, ref bbb, ccc, ddd, x[1], 11);
+            Ggg(ref ddd, eee, ref aaa, bbb, ccc, x[3], 14);
+            Ggg(ref ccc, ddd, ref eee, aaa, bbb, x[11], 14);
+            Ggg(ref bbb, ccc, ref ddd, eee, aaa, x[15], 6);
+            Ggg(ref aaa, bbb, ref ccc, ddd, eee, x[0], 14);
+            Ggg(ref eee, aaa, ref bbb, ccc, ddd, x[5], 6);
+            Ggg(ref ddd, eee, ref aaa, bbb, ccc, x[12], 9);
+            Ggg(ref ccc, ddd, ref eee, aaa, bbb, x[2], 12);
+            Ggg(ref bbb, ccc, ref ddd, eee, aaa, x[13], 9);
+            Ggg(ref aaa, bbb, ref ccc, ddd, eee, x[9], 12);
+            Ggg(ref eee, aaa, ref bbb, ccc, ddd, x[7], 5);
+            Ggg(ref ddd, eee, ref aaa, bbb, ccc, x[10], 15);
+            Ggg(ref ccc, ddd, ref eee, aaa, bbb, x[14], 8);
 
             /* parallel round 5 */
-            FFF(ref bbb, ccc, ref ddd, eee, aaa, X[12], 8);
-            FFF(ref aaa, bbb, ref ccc, ddd, eee, X[15], 5);
-            FFF(ref eee, aaa, ref bbb, ccc, ddd, X[10], 12);
-            FFF(ref ddd, eee, ref aaa, bbb, ccc, X[4], 9);
-            FFF(ref ccc, ddd, ref eee, aaa, bbb, X[1], 12);
-            FFF(ref bbb, ccc, ref ddd, eee, aaa, X[5], 5);
-            FFF(ref aaa, bbb, ref ccc, ddd, eee, X[8], 14);
-            FFF(ref eee, aaa, ref bbb, ccc, ddd, X[7], 6);
-            FFF(ref ddd, eee, ref aaa, bbb, ccc, X[6], 8);
-            FFF(ref ccc, ddd, ref eee, aaa, bbb, X[2], 13);
-            FFF(ref bbb, ccc, ref ddd, eee, aaa, X[13], 6);
-            FFF(ref aaa, bbb, ref ccc, ddd, eee, X[14], 5);
-            FFF(ref eee, aaa, ref bbb, ccc, ddd, X[0], 15);
-            FFF(ref ddd, eee, ref aaa, bbb, ccc, X[3], 13);
-            FFF(ref ccc, ddd, ref eee, aaa, bbb, X[9], 11);
-            FFF(ref bbb, ccc, ref ddd, eee, aaa, X[11], 11);
+            Fff(ref bbb, ccc, ref ddd, eee, aaa, x[12], 8);
+            Fff(ref aaa, bbb, ref ccc, ddd, eee, x[15], 5);
+            Fff(ref eee, aaa, ref bbb, ccc, ddd, x[10], 12);
+            Fff(ref ddd, eee, ref aaa, bbb, ccc, x[4], 9);
+            Fff(ref ccc, ddd, ref eee, aaa, bbb, x[1], 12);
+            Fff(ref bbb, ccc, ref ddd, eee, aaa, x[5], 5);
+            Fff(ref aaa, bbb, ref ccc, ddd, eee, x[8], 14);
+            Fff(ref eee, aaa, ref bbb, ccc, ddd, x[7], 6);
+            Fff(ref ddd, eee, ref aaa, bbb, ccc, x[6], 8);
+            Fff(ref ccc, ddd, ref eee, aaa, bbb, x[2], 13);
+            Fff(ref bbb, ccc, ref ddd, eee, aaa, x[13], 6);
+            Fff(ref aaa, bbb, ref ccc, ddd, eee, x[14], 5);
+            Fff(ref eee, aaa, ref bbb, ccc, ddd, x[0], 15);
+            Fff(ref ddd, eee, ref aaa, bbb, ccc, x[3], 13);
+            Fff(ref ccc, ddd, ref eee, aaa, bbb, x[9], 11);
+            Fff(ref bbb, ccc, ref ddd, eee, aaa, x[11], 11);
 
             // combine results */
-            ddd += cc + MDbuf[1]; /* final result for MDbuf[0] */
-            MDbuf[1] = MDbuf[2] + dd + eee;
-            MDbuf[2] = MDbuf[3] + ee + aaa;
-            MDbuf[3] = MDbuf[4] + aa + bbb;
-            MDbuf[4] = MDbuf[0] + bb + ccc;
-            MDbuf[0] = ddd;
+            ddd += cc + mDbuf[1]; /* final result for MDbuf[0] */
+            mDbuf[1] = mDbuf[2] + dd + eee;
+            mDbuf[2] = mDbuf[3] + ee + aaa;
+            mDbuf[3] = mDbuf[4] + aa + bbb;
+            mDbuf[4] = mDbuf[0] + bb + ccc;
+            mDbuf[0] = ddd;
         }
 
         /// puts bytes from strptr into X and pad out; appends length 
         /// and finally, compresses the last block(s)
         /// note: length in bits == 8 * (lswlen + 2^32 mswlen).
         /// note: there are (lswlen mod 64) bytes left in strptr.
-        public static void MDfinish(ref uint[] MDbuf, byte[] strptr, long index, uint lswlen, uint mswlen)
+        private static void MDfinish(ref uint[] mDbuf, byte[] strptr, long index, uint lswlen, uint mswlen)
         {
             //UInt32 i;                                 /* counter       */
-            var X = Enumerable.Repeat((uint) 0, 16).ToArray(); /* message words */
-
+            var x = Enumerable.Repeat((uint) 0, 16).ToArray(); /* message words */
 
             /* put bytes from strptr into X */
             for (var i = 0; i < (lswlen & 63); i++)
                 /* byte i goes into word X[i div 4] at pos.  8*(i mod 4)  */
-                X[i >> 2] ^= Convert.ToUInt32(strptr[i + index]) << (8 * (i & 3));
+                x[i >> 2] ^= Convert.ToUInt32(strptr[i + index]) << (8 * (i & 3));
 
             /* append the bit m_n == 1 */
-            X[(lswlen >> 2) & 15] ^= (uint) 1 << Convert.ToInt32(8 * (lswlen & 3) + 7);
+            x[(lswlen >> 2) & 15] ^= (uint) 1 << Convert.ToInt32(8 * (lswlen & 3) + 7);
 
             if ((lswlen & 63) > 55)
             {
                 /* length goes to next block */
-                compress(ref MDbuf, X);
-                X = Enumerable.Repeat((uint) 0, 16).ToArray();
+                Compress(ref mDbuf, x);
+                x = Enumerable.Repeat((uint) 0, 16).ToArray();
             }
 
             /* append length in bits*/
-            X[14] = lswlen << 3;
-            X[15] = (lswlen >> 29) | (mswlen << 3);
-            compress(ref MDbuf, X);
+            x[14] = lswlen << 3;
+            x[15] = (lswlen >> 29) | (mswlen << 3);
+            Compress(ref mDbuf, x);
         }
 
         protected override void HashCore(byte[] array, int ibStart, int cbSize)
@@ -394,73 +392,73 @@ namespace System.Security.Cryptography
             while (index < cbSize)
             {
                 var bytesRemaining = cbSize - index;
-                if (UnhashedBufferLength > 0)
+                if (_unhashedBufferLength > 0)
                 {
-                    if (bytesRemaining + UnhashedBufferLength >= UnhashedBuffer.Length)
+                    if (bytesRemaining + _unhashedBufferLength >= _unhashedBuffer.Length)
                     {
-                        Array.Copy(array, ibStart + index, UnhashedBuffer, UnhashedBufferLength,
-                            UnhashedBuffer.Length - UnhashedBufferLength);
-                        index += UnhashedBuffer.Length - UnhashedBufferLength;
-                        UnhashedBufferLength = UnhashedBuffer.Length;
+                        Array.Copy(array, ibStart + index, _unhashedBuffer, _unhashedBufferLength,
+                            _unhashedBuffer.Length - _unhashedBufferLength);
+                        index += _unhashedBuffer.Length - _unhashedBufferLength;
+                        _unhashedBufferLength = _unhashedBuffer.Length;
 
                         for (var i = 0; i < 16; i++)
-                            X[i] = ReadUInt32(UnhashedBuffer, i * 4);
+                            _x[i] = ReadUInt32(_unhashedBuffer, i * 4);
 
-                        compress(ref MDbuf, X);
-                        UnhashedBufferLength = 0;
+                        Compress(ref _mDbuf, _x);
+                        _unhashedBufferLength = 0;
                     }
                     else
                     {
-                        Array.Copy(array, ibStart + index, UnhashedBuffer, UnhashedBufferLength, bytesRemaining);
-                        UnhashedBufferLength += bytesRemaining;
+                        Array.Copy(array, ibStart + index, _unhashedBuffer, _unhashedBufferLength, bytesRemaining);
+                        _unhashedBufferLength += bytesRemaining;
                         index += bytesRemaining;
                     }
                 }
                 else
                 {
-                    if (bytesRemaining >= UnhashedBuffer.Length)
+                    if (bytesRemaining >= _unhashedBuffer.Length)
                     {
                         for (var i = 0; i < 16; i++)
-                            X[i] = ReadUInt32(array, index + i * 4);
-                        index += UnhashedBuffer.Length;
+                            _x[i] = ReadUInt32(array, index + i * 4);
+                        index += _unhashedBuffer.Length;
 
-                        compress(ref MDbuf, X);
+                        Compress(ref _mDbuf, _x);
                     }
                     else
                     {
-                        Array.Copy(array, ibStart + index, UnhashedBuffer, 0, bytesRemaining);
-                        UnhashedBufferLength = bytesRemaining;
+                        Array.Copy(array, ibStart + index, _unhashedBuffer, 0, bytesRemaining);
+                        _unhashedBufferLength = bytesRemaining;
                         index += bytesRemaining;
                     }
                 }
             }
 
-            HashedLength += cbSize;
+            _hashedLength += cbSize;
         }
 
         protected override byte[] HashFinal()
         {
-            MDfinish(ref MDbuf, UnhashedBuffer, 0, Convert.ToUInt32(HashedLength), 0);
+            MDfinish(ref _mDbuf, _unhashedBuffer, 0, Convert.ToUInt32(_hashedLength), 0);
 
-            var result = new byte[RMDsize / 8];
+            var result = new byte[RmDsize / 8];
 
-            for (var i = 0; i < RMDsize / 8; i += 4)
+            for (var i = 0; i < RmDsize / 8; i += 4)
             {
-                result[i] = Convert.ToByte(MDbuf[i >> 2] & 0xFF); /* implicit cast to byte  */
-                result[i + 1] = Convert.ToByte((MDbuf[i >> 2] >> 8) & 0xFF); /*  extracts the 8 least  */
-                result[i + 2] = Convert.ToByte((MDbuf[i >> 2] >> 16) & 0xFF); /*  significant bits.     */
-                result[i + 3] = Convert.ToByte((MDbuf[i >> 2] >> 24) & 0xFF);
+                result[i] = Convert.ToByte(_mDbuf[i >> 2] & 0xFF); /* implicit cast to byte  */
+                result[i + 1] = Convert.ToByte((_mDbuf[i >> 2] >> 8) & 0xFF); /*  extracts the 8 least  */
+                result[i + 2] = Convert.ToByte((_mDbuf[i >> 2] >> 16) & 0xFF); /*  significant bits.     */
+                result[i + 3] = Convert.ToByte((_mDbuf[i >> 2] >> 24) & 0xFF);
             }
 
             return result;
         }
 
-        public override void Initialize()
+        public sealed override void Initialize()
         {
-            MDinit(ref MDbuf);
-            X = Enumerable.Repeat((uint) 0, 16).ToArray();
-            HashedLength = 0;
-            UnhashedBufferLength = 0;
+            MDinit(ref _mDbuf);
+            _x = Enumerable.Repeat((uint) 0, 16).ToArray();
+            _hashedLength = 0;
+            _unhashedBufferLength = 0;
         }
     }
 }
