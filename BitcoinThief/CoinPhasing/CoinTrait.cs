@@ -37,11 +37,13 @@ namespace BitcoinThief.CoinPhasing
         /// </summary>
         public static IEnumerable<CoinTrait> All = new[]
         {
-            new CoinTrait("btc","p2pkh",Bitcoin.P2PkhGenerator,Bitcoin.P2PkhValidator, 40),
-            new CoinTrait("btc","p2sh",Bitcoin.P2ShGenerator,Bitcoin.P2ShValidator, 40),
-            new CoinTrait("btc","p2wpkh",Bitcoin.P2WpkhGenerator,Bitcoin.P2WpkhValidator, 20),
-            new CoinTrait("btc","p2wsh",Bitcoin.P2WshGenerator,Bitcoin.P2WshValidator, 10)
-
+            new CoinTrait("btc", "p2pkh", Bitcoin.P2PkhGenerator, Bitcoin.P2PkhValidator, 40),
+            new CoinTrait("btc", "p2sh", Bitcoin.P2ShGenerator, Bitcoin.P2ShValidator, 40),
+            new CoinTrait("btc", "p2wpkh", Bitcoin.P2WpkhGenerator, Bitcoin.P2WpkhValidator, 20),
+            new CoinTrait("btc", "p2wsh", Bitcoin.P2WshGenerator, Bitcoin.P2WshValidator, 10),
+            new CoinTrait("eth", "reg/u", Ether.UcAddressGenerator, Ether.AddressValidator, 40),
+            new CoinTrait("eth", "reg/l", Ether.LcAddressGenerator, Ether.AddressValidator, 10),
+            new CoinTrait("eth", "reg/c", Ether.CcAddressGenerator, Ether.AddressValidator, 20)
         };
     }
 }
